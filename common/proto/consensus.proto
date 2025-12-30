@@ -1,28 +1,47 @@
+
 syntax = "proto3";
-package proto;
 
-option go_package = "consensus/common/proto";
+package common;
 
-service RaftService {
+option go_package = "common/proto";
+
+// --- DỊCH VỤ DÙNG CHUNG (SHARED SERVICE) ---
+// Service này chứa tất cả các method của cả Raft và pBFT
+service ConsensusService {
+  // ==========================================
+  // PHẦN 1: RAFT RPCs 
+  // ==========================================
   rpc RequestVote (RequestVoteArgs) returns (RequestVoteReply);
   rpc AppendEntries (AppendEntriesArgs) returns (AppendEntriesReply);
   rpc SetNetworkPartition (PartitionArgs) returns (PartitionReply);
   rpc GetStatus (Empty) returns (StatusReply);
   rpc Propose (ProposeArgs) returns (ProposeReply); 
   rpc ForceLeader (Empty) returns (Empty);
+  // ==========================================
+  // PHẦN 2: pBFT RPCs 
+  // Gom về 1 hàm xử lý chung
+  // ==========================================
+  rpc HandlePbftMessage (PbftMessage) returns (PbftResponse);
 }
 
+// --- COMMON MESSAGES ---
 message Empty {}
+
+// =========================================================
+// RAFT 
+// =========================================================
 
 message LogEntry {
   int64 term = 1;
   int64 index = 2;
-  string command = 3;
+  // [LAB REQUIREMENT] "Message đặc biệt giả lập Block"
+  // Raft sẽ lưu JSON string của Block vào field 'command' này
+  string command = 3; 
 }
 
 message RequestVoteArgs {
   int64 term = 1;
-  int32 candidateId = 2;
+  int32 candidateId = 2; // Raft dùng int32 ID
 }
 
 message RequestVoteReply {
@@ -62,4 +81,29 @@ message PartitionArgs {
 
 message PartitionReply {
   bool success = 1;
+}
+
+// =========================================================
+// pBFT 
+// =========================================================
+
+message PbftMessage {
+  // Header
+  string type = 1;       // "PrePrepare", "Prepare", "Commit"
+  string node_id = 2;    // pBFT dùng string ID (VD: "node1")
+
+  // Payload (View/Sequence)
+  int64 view = 3;        // Thay cho Epoch (để rõ nghĩa pBFT)
+  int64 sequence = 4;
+  
+  // Block Info 
+  string block_hash = 5;
+  string prev_block_hash = 6;
+  string data = 7;       // Nội dung Block
+  int64 timestamp = 8;
+}
+
+message PbftResponse {
+  bool success = 1;
+  string message = 2;
 }
