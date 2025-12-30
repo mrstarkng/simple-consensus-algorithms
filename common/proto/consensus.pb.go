@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// --- COMMON MESSAGES ---
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -58,10 +59,12 @@ func (*Empty) Descriptor() ([]byte, []int) {
 }
 
 type LogEntry struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Term          int64                  `protobuf:"varint,1,opt,name=term,proto3" json:"term,omitempty"`
-	Index         int64                  `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
-	Command       string                 `protobuf:"bytes,3,opt,name=command,proto3" json:"command,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Term  int64                  `protobuf:"varint,1,opt,name=term,proto3" json:"term,omitempty"`
+	Index int64                  `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+	// [LAB REQUIREMENT] "Message đặc biệt giả lập Block"
+	// Raft sẽ lưu JSON string của Block vào field 'command' này
+	Command       string `protobuf:"bytes,3,opt,name=command,proto3" json:"command,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -120,7 +123,7 @@ func (x *LogEntry) GetCommand() string {
 type RequestVoteArgs struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Term          int64                  `protobuf:"varint,1,opt,name=term,proto3" json:"term,omitempty"`
-	CandidateId   int32                  `protobuf:"varint,2,opt,name=candidateId,proto3" json:"candidateId,omitempty"`
+	CandidateId   int32                  `protobuf:"varint,2,opt,name=candidateId,proto3" json:"candidateId,omitempty"` // Raft dùng int32 ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -577,11 +580,166 @@ func (x *PartitionReply) GetSuccess() bool {
 	return false
 }
 
+type PbftMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Header
+	Type   string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`                   // "PrePrepare", "Prepare", "Commit"
+	NodeId string `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"` // pBFT dùng string ID (VD: "node1")
+	// Payload (View/Sequence)
+	View     int64 `protobuf:"varint,3,opt,name=view,proto3" json:"view,omitempty"` // Thay cho Epoch (để rõ nghĩa pBFT)
+	Sequence int64 `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// Block Info
+	BlockHash     string `protobuf:"bytes,5,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	PrevBlockHash string `protobuf:"bytes,6,opt,name=prev_block_hash,json=prevBlockHash,proto3" json:"prev_block_hash,omitempty"`
+	Data          string `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"` // Nội dung Block
+	Timestamp     int64  `protobuf:"varint,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PbftMessage) Reset() {
+	*x = PbftMessage{}
+	mi := &file_common_proto_consensus_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PbftMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PbftMessage) ProtoMessage() {}
+
+func (x *PbftMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_consensus_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PbftMessage.ProtoReflect.Descriptor instead.
+func (*PbftMessage) Descriptor() ([]byte, []int) {
+	return file_common_proto_consensus_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PbftMessage) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *PbftMessage) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *PbftMessage) GetView() int64 {
+	if x != nil {
+		return x.View
+	}
+	return 0
+}
+
+func (x *PbftMessage) GetSequence() int64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *PbftMessage) GetBlockHash() string {
+	if x != nil {
+		return x.BlockHash
+	}
+	return ""
+}
+
+func (x *PbftMessage) GetPrevBlockHash() string {
+	if x != nil {
+		return x.PrevBlockHash
+	}
+	return ""
+}
+
+func (x *PbftMessage) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+func (x *PbftMessage) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+type PbftResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PbftResponse) Reset() {
+	*x = PbftResponse{}
+	mi := &file_common_proto_consensus_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PbftResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PbftResponse) ProtoMessage() {}
+
+func (x *PbftResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_consensus_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PbftResponse.ProtoReflect.Descriptor instead.
+func (*PbftResponse) Descriptor() ([]byte, []int) {
+	return file_common_proto_consensus_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *PbftResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *PbftResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_common_proto_consensus_proto protoreflect.FileDescriptor
 
 const file_common_proto_consensus_proto_rawDesc = "" +
 	"\n" +
-	"\x1ccommon/proto/consensus.proto\x12\x05proto\"\a\n" +
+	"\x1ccommon/proto/consensus.proto\x12\x06common\"\a\n" +
 	"\x05Empty\"N\n" +
 	"\bLogEntry\x12\x12\n" +
 	"\x04term\x18\x01 \x01(\x03R\x04term\x12\x14\n" +
@@ -592,11 +750,11 @@ const file_common_proto_consensus_proto_rawDesc = "" +
 	"\vcandidateId\x18\x02 \x01(\x05R\vcandidateId\"I\n" +
 	"\x10RequestVoteReply\x12\x12\n" +
 	"\x04term\x18\x01 \x01(\x03R\x04term\x12!\n" +
-	"\fvote_granted\x18\x02 \x01(\bR\vvoteGranted\"n\n" +
+	"\fvote_granted\x18\x02 \x01(\bR\vvoteGranted\"o\n" +
 	"\x11AppendEntriesArgs\x12\x12\n" +
 	"\x04term\x18\x01 \x01(\x03R\x04term\x12\x1a\n" +
-	"\bleaderId\x18\x02 \x01(\x05R\bleaderId\x12)\n" +
-	"\aentries\x18\x03 \x03(\v2\x0f.proto.LogEntryR\aentries\"B\n" +
+	"\bleaderId\x18\x02 \x01(\x05R\bleaderId\x12*\n" +
+	"\aentries\x18\x03 \x03(\v2\x10.common.LogEntryR\aentries\"B\n" +
 	"\x12AppendEntriesReply\x12\x12\n" +
 	"\x04term\x18\x01 \x01(\x03R\x04term\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\"G\n" +
@@ -612,14 +770,28 @@ const file_common_proto_consensus_proto_rawDesc = "" +
 	"\rPartitionArgs\x12(\n" +
 	"\x0fisolatedNodeIds\x18\x01 \x03(\x05R\x0fisolatedNodeIds\"*\n" +
 	"\x0ePartitionReply\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xe5\x02\n" +
-	"\vRaftService\x12>\n" +
-	"\vRequestVote\x12\x16.proto.RequestVoteArgs\x1a\x17.proto.RequestVoteReply\x12D\n" +
-	"\rAppendEntries\x12\x18.proto.AppendEntriesArgs\x1a\x19.proto.AppendEntriesReply\x12B\n" +
-	"\x13SetNetworkPartition\x12\x14.proto.PartitionArgs\x1a\x15.proto.PartitionReply\x12-\n" +
-	"\tGetStatus\x12\f.proto.Empty\x1a\x12.proto.StatusReply\x122\n" +
-	"\aPropose\x12\x12.proto.ProposeArgs\x1a\x13.proto.ProposeReply\x12)\n" +
-	"\vForceLeader\x12\f.proto.Empty\x1a\f.proto.EmptyB\x0eZ\fcommon/protob\x06proto3"
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xe3\x01\n" +
+	"\vPbftMessage\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12\x12\n" +
+	"\x04view\x18\x03 \x01(\x03R\x04view\x12\x1a\n" +
+	"\bsequence\x18\x04 \x01(\x03R\bsequence\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\x05 \x01(\tR\tblockHash\x12&\n" +
+	"\x0fprev_block_hash\x18\x06 \x01(\tR\rprevBlockHash\x12\x12\n" +
+	"\x04data\x18\a \x01(\tR\x04data\x12\x1c\n" +
+	"\ttimestamp\x18\b \x01(\x03R\ttimestamp\"B\n" +
+	"\fPbftResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xb6\x03\n" +
+	"\x10ConsensusService\x12@\n" +
+	"\vRequestVote\x12\x17.common.RequestVoteArgs\x1a\x18.common.RequestVoteReply\x12F\n" +
+	"\rAppendEntries\x12\x19.common.AppendEntriesArgs\x1a\x1a.common.AppendEntriesReply\x12D\n" +
+	"\x13SetNetworkPartition\x12\x15.common.PartitionArgs\x1a\x16.common.PartitionReply\x12/\n" +
+	"\tGetStatus\x12\r.common.Empty\x1a\x13.common.StatusReply\x124\n" +
+	"\aPropose\x12\x13.common.ProposeArgs\x1a\x14.common.ProposeReply\x12+\n" +
+	"\vForceLeader\x12\r.common.Empty\x1a\r.common.Empty\x12>\n" +
+	"\x11HandlePbftMessage\x12\x13.common.PbftMessage\x1a\x14.common.PbftResponseB\x0eZ\fcommon/protob\x06proto3"
 
 var (
 	file_common_proto_consensus_proto_rawDescOnce sync.Once
@@ -633,36 +805,40 @@ func file_common_proto_consensus_proto_rawDescGZIP() []byte {
 	return file_common_proto_consensus_proto_rawDescData
 }
 
-var file_common_proto_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_common_proto_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_common_proto_consensus_proto_goTypes = []any{
-	(*Empty)(nil),              // 0: proto.Empty
-	(*LogEntry)(nil),           // 1: proto.LogEntry
-	(*RequestVoteArgs)(nil),    // 2: proto.RequestVoteArgs
-	(*RequestVoteReply)(nil),   // 3: proto.RequestVoteReply
-	(*AppendEntriesArgs)(nil),  // 4: proto.AppendEntriesArgs
-	(*AppendEntriesReply)(nil), // 5: proto.AppendEntriesReply
-	(*StatusReply)(nil),        // 6: proto.StatusReply
-	(*ProposeArgs)(nil),        // 7: proto.ProposeArgs
-	(*ProposeReply)(nil),       // 8: proto.ProposeReply
-	(*PartitionArgs)(nil),      // 9: proto.PartitionArgs
-	(*PartitionReply)(nil),     // 10: proto.PartitionReply
+	(*Empty)(nil),              // 0: common.Empty
+	(*LogEntry)(nil),           // 1: common.LogEntry
+	(*RequestVoteArgs)(nil),    // 2: common.RequestVoteArgs
+	(*RequestVoteReply)(nil),   // 3: common.RequestVoteReply
+	(*AppendEntriesArgs)(nil),  // 4: common.AppendEntriesArgs
+	(*AppendEntriesReply)(nil), // 5: common.AppendEntriesReply
+	(*StatusReply)(nil),        // 6: common.StatusReply
+	(*ProposeArgs)(nil),        // 7: common.ProposeArgs
+	(*ProposeReply)(nil),       // 8: common.ProposeReply
+	(*PartitionArgs)(nil),      // 9: common.PartitionArgs
+	(*PartitionReply)(nil),     // 10: common.PartitionReply
+	(*PbftMessage)(nil),        // 11: common.PbftMessage
+	(*PbftResponse)(nil),       // 12: common.PbftResponse
 }
 var file_common_proto_consensus_proto_depIdxs = []int32{
-	1,  // 0: proto.AppendEntriesArgs.entries:type_name -> proto.LogEntry
-	2,  // 1: proto.RaftService.RequestVote:input_type -> proto.RequestVoteArgs
-	4,  // 2: proto.RaftService.AppendEntries:input_type -> proto.AppendEntriesArgs
-	9,  // 3: proto.RaftService.SetNetworkPartition:input_type -> proto.PartitionArgs
-	0,  // 4: proto.RaftService.GetStatus:input_type -> proto.Empty
-	7,  // 5: proto.RaftService.Propose:input_type -> proto.ProposeArgs
-	0,  // 6: proto.RaftService.ForceLeader:input_type -> proto.Empty
-	3,  // 7: proto.RaftService.RequestVote:output_type -> proto.RequestVoteReply
-	5,  // 8: proto.RaftService.AppendEntries:output_type -> proto.AppendEntriesReply
-	10, // 9: proto.RaftService.SetNetworkPartition:output_type -> proto.PartitionReply
-	6,  // 10: proto.RaftService.GetStatus:output_type -> proto.StatusReply
-	8,  // 11: proto.RaftService.Propose:output_type -> proto.ProposeReply
-	0,  // 12: proto.RaftService.ForceLeader:output_type -> proto.Empty
-	7,  // [7:13] is the sub-list for method output_type
-	1,  // [1:7] is the sub-list for method input_type
+	1,  // 0: common.AppendEntriesArgs.entries:type_name -> common.LogEntry
+	2,  // 1: common.ConsensusService.RequestVote:input_type -> common.RequestVoteArgs
+	4,  // 2: common.ConsensusService.AppendEntries:input_type -> common.AppendEntriesArgs
+	9,  // 3: common.ConsensusService.SetNetworkPartition:input_type -> common.PartitionArgs
+	0,  // 4: common.ConsensusService.GetStatus:input_type -> common.Empty
+	7,  // 5: common.ConsensusService.Propose:input_type -> common.ProposeArgs
+	0,  // 6: common.ConsensusService.ForceLeader:input_type -> common.Empty
+	11, // 7: common.ConsensusService.HandlePbftMessage:input_type -> common.PbftMessage
+	3,  // 8: common.ConsensusService.RequestVote:output_type -> common.RequestVoteReply
+	5,  // 9: common.ConsensusService.AppendEntries:output_type -> common.AppendEntriesReply
+	10, // 10: common.ConsensusService.SetNetworkPartition:output_type -> common.PartitionReply
+	6,  // 11: common.ConsensusService.GetStatus:output_type -> common.StatusReply
+	8,  // 12: common.ConsensusService.Propose:output_type -> common.ProposeReply
+	0,  // 13: common.ConsensusService.ForceLeader:output_type -> common.Empty
+	12, // 14: common.ConsensusService.HandlePbftMessage:output_type -> common.PbftResponse
+	8,  // [8:15] is the sub-list for method output_type
+	1,  // [1:8] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -679,7 +855,7 @@ func file_common_proto_consensus_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_consensus_proto_rawDesc), len(file_common_proto_consensus_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -19,291 +19,349 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RaftService_RequestVote_FullMethodName         = "/proto.RaftService/RequestVote"
-	RaftService_AppendEntries_FullMethodName       = "/proto.RaftService/AppendEntries"
-	RaftService_SetNetworkPartition_FullMethodName = "/proto.RaftService/SetNetworkPartition"
-	RaftService_GetStatus_FullMethodName           = "/proto.RaftService/GetStatus"
-	RaftService_Propose_FullMethodName             = "/proto.RaftService/Propose"
-	RaftService_ForceLeader_FullMethodName         = "/proto.RaftService/ForceLeader"
+	ConsensusService_RequestVote_FullMethodName         = "/common.ConsensusService/RequestVote"
+	ConsensusService_AppendEntries_FullMethodName       = "/common.ConsensusService/AppendEntries"
+	ConsensusService_SetNetworkPartition_FullMethodName = "/common.ConsensusService/SetNetworkPartition"
+	ConsensusService_GetStatus_FullMethodName           = "/common.ConsensusService/GetStatus"
+	ConsensusService_Propose_FullMethodName             = "/common.ConsensusService/Propose"
+	ConsensusService_ForceLeader_FullMethodName         = "/common.ConsensusService/ForceLeader"
+	ConsensusService_HandlePbftMessage_FullMethodName   = "/common.ConsensusService/HandlePbftMessage"
 )
 
-// RaftServiceClient is the client API for RaftService service.
+// ConsensusServiceClient is the client API for ConsensusService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type RaftServiceClient interface {
+//
+// --- DỊCH VỤ DÙNG CHUNG (SHARED SERVICE) ---
+// Service này chứa tất cả các method của cả Raft và pBFT
+type ConsensusServiceClient interface {
+	// ==========================================
+	// PHẦN 1: RAFT RPCs
+	// ==========================================
 	RequestVote(ctx context.Context, in *RequestVoteArgs, opts ...grpc.CallOption) (*RequestVoteReply, error)
 	AppendEntries(ctx context.Context, in *AppendEntriesArgs, opts ...grpc.CallOption) (*AppendEntriesReply, error)
 	SetNetworkPartition(ctx context.Context, in *PartitionArgs, opts ...grpc.CallOption) (*PartitionReply, error)
 	GetStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*StatusReply, error)
 	Propose(ctx context.Context, in *ProposeArgs, opts ...grpc.CallOption) (*ProposeReply, error)
 	ForceLeader(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	// ==========================================
+	// PHẦN 2: pBFT RPCs
+	// Gom về 1 hàm xử lý chung
+	// ==========================================
+	HandlePbftMessage(ctx context.Context, in *PbftMessage, opts ...grpc.CallOption) (*PbftResponse, error)
 }
 
-type raftServiceClient struct {
+type consensusServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewRaftServiceClient(cc grpc.ClientConnInterface) RaftServiceClient {
-	return &raftServiceClient{cc}
+func NewConsensusServiceClient(cc grpc.ClientConnInterface) ConsensusServiceClient {
+	return &consensusServiceClient{cc}
 }
 
-func (c *raftServiceClient) RequestVote(ctx context.Context, in *RequestVoteArgs, opts ...grpc.CallOption) (*RequestVoteReply, error) {
+func (c *consensusServiceClient) RequestVote(ctx context.Context, in *RequestVoteArgs, opts ...grpc.CallOption) (*RequestVoteReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RequestVoteReply)
-	err := c.cc.Invoke(ctx, RaftService_RequestVote_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_RequestVote_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) AppendEntries(ctx context.Context, in *AppendEntriesArgs, opts ...grpc.CallOption) (*AppendEntriesReply, error) {
+func (c *consensusServiceClient) AppendEntries(ctx context.Context, in *AppendEntriesArgs, opts ...grpc.CallOption) (*AppendEntriesReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AppendEntriesReply)
-	err := c.cc.Invoke(ctx, RaftService_AppendEntries_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_AppendEntries_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) SetNetworkPartition(ctx context.Context, in *PartitionArgs, opts ...grpc.CallOption) (*PartitionReply, error) {
+func (c *consensusServiceClient) SetNetworkPartition(ctx context.Context, in *PartitionArgs, opts ...grpc.CallOption) (*PartitionReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PartitionReply)
-	err := c.cc.Invoke(ctx, RaftService_SetNetworkPartition_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_SetNetworkPartition_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) GetStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*StatusReply, error) {
+func (c *consensusServiceClient) GetStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*StatusReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StatusReply)
-	err := c.cc.Invoke(ctx, RaftService_GetStatus_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_GetStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) Propose(ctx context.Context, in *ProposeArgs, opts ...grpc.CallOption) (*ProposeReply, error) {
+func (c *consensusServiceClient) Propose(ctx context.Context, in *ProposeArgs, opts ...grpc.CallOption) (*ProposeReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProposeReply)
-	err := c.cc.Invoke(ctx, RaftService_Propose_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_Propose_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) ForceLeader(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+func (c *consensusServiceClient) ForceLeader(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, RaftService_ForceLeader_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ConsensusService_ForceLeader_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// RaftServiceServer is the server API for RaftService service.
-// All implementations must embed UnimplementedRaftServiceServer
+func (c *consensusServiceClient) HandlePbftMessage(ctx context.Context, in *PbftMessage, opts ...grpc.CallOption) (*PbftResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PbftResponse)
+	err := c.cc.Invoke(ctx, ConsensusService_HandlePbftMessage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ConsensusServiceServer is the server API for ConsensusService service.
+// All implementations must embed UnimplementedConsensusServiceServer
 // for forward compatibility.
-type RaftServiceServer interface {
+//
+// --- DỊCH VỤ DÙNG CHUNG (SHARED SERVICE) ---
+// Service này chứa tất cả các method của cả Raft và pBFT
+type ConsensusServiceServer interface {
+	// ==========================================
+	// PHẦN 1: RAFT RPCs
+	// ==========================================
 	RequestVote(context.Context, *RequestVoteArgs) (*RequestVoteReply, error)
 	AppendEntries(context.Context, *AppendEntriesArgs) (*AppendEntriesReply, error)
 	SetNetworkPartition(context.Context, *PartitionArgs) (*PartitionReply, error)
 	GetStatus(context.Context, *Empty) (*StatusReply, error)
 	Propose(context.Context, *ProposeArgs) (*ProposeReply, error)
 	ForceLeader(context.Context, *Empty) (*Empty, error)
-	mustEmbedUnimplementedRaftServiceServer()
+	// ==========================================
+	// PHẦN 2: pBFT RPCs
+	// Gom về 1 hàm xử lý chung
+	// ==========================================
+	HandlePbftMessage(context.Context, *PbftMessage) (*PbftResponse, error)
+	mustEmbedUnimplementedConsensusServiceServer()
 }
 
-// UnimplementedRaftServiceServer must be embedded to have
+// UnimplementedConsensusServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedRaftServiceServer struct{}
+type UnimplementedConsensusServiceServer struct{}
 
-func (UnimplementedRaftServiceServer) RequestVote(context.Context, *RequestVoteArgs) (*RequestVoteReply, error) {
+func (UnimplementedConsensusServiceServer) RequestVote(context.Context, *RequestVoteArgs) (*RequestVoteReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method RequestVote not implemented")
 }
-func (UnimplementedRaftServiceServer) AppendEntries(context.Context, *AppendEntriesArgs) (*AppendEntriesReply, error) {
+func (UnimplementedConsensusServiceServer) AppendEntries(context.Context, *AppendEntriesArgs) (*AppendEntriesReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method AppendEntries not implemented")
 }
-func (UnimplementedRaftServiceServer) SetNetworkPartition(context.Context, *PartitionArgs) (*PartitionReply, error) {
+func (UnimplementedConsensusServiceServer) SetNetworkPartition(context.Context, *PartitionArgs) (*PartitionReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetNetworkPartition not implemented")
 }
-func (UnimplementedRaftServiceServer) GetStatus(context.Context, *Empty) (*StatusReply, error) {
+func (UnimplementedConsensusServiceServer) GetStatus(context.Context, *Empty) (*StatusReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetStatus not implemented")
 }
-func (UnimplementedRaftServiceServer) Propose(context.Context, *ProposeArgs) (*ProposeReply, error) {
+func (UnimplementedConsensusServiceServer) Propose(context.Context, *ProposeArgs) (*ProposeReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Propose not implemented")
 }
-func (UnimplementedRaftServiceServer) ForceLeader(context.Context, *Empty) (*Empty, error) {
+func (UnimplementedConsensusServiceServer) ForceLeader(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method ForceLeader not implemented")
 }
-func (UnimplementedRaftServiceServer) mustEmbedUnimplementedRaftServiceServer() {}
-func (UnimplementedRaftServiceServer) testEmbeddedByValue()                     {}
+func (UnimplementedConsensusServiceServer) HandlePbftMessage(context.Context, *PbftMessage) (*PbftResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HandlePbftMessage not implemented")
+}
+func (UnimplementedConsensusServiceServer) mustEmbedUnimplementedConsensusServiceServer() {}
+func (UnimplementedConsensusServiceServer) testEmbeddedByValue()                          {}
 
-// UnsafeRaftServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to RaftServiceServer will
+// UnsafeConsensusServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ConsensusServiceServer will
 // result in compilation errors.
-type UnsafeRaftServiceServer interface {
-	mustEmbedUnimplementedRaftServiceServer()
+type UnsafeConsensusServiceServer interface {
+	mustEmbedUnimplementedConsensusServiceServer()
 }
 
-func RegisterRaftServiceServer(s grpc.ServiceRegistrar, srv RaftServiceServer) {
-	// If the following call panics, it indicates UnimplementedRaftServiceServer was
+func RegisterConsensusServiceServer(s grpc.ServiceRegistrar, srv ConsensusServiceServer) {
+	// If the following call panics, it indicates UnimplementedConsensusServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&RaftService_ServiceDesc, srv)
+	s.RegisterService(&ConsensusService_ServiceDesc, srv)
 }
 
-func _RaftService_RequestVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_RequestVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestVoteArgs)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).RequestVote(ctx, in)
+		return srv.(ConsensusServiceServer).RequestVote(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_RequestVote_FullMethodName,
+		FullMethod: ConsensusService_RequestVote_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).RequestVote(ctx, req.(*RequestVoteArgs))
+		return srv.(ConsensusServiceServer).RequestVote(ctx, req.(*RequestVoteArgs))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_AppendEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_AppendEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AppendEntriesArgs)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).AppendEntries(ctx, in)
+		return srv.(ConsensusServiceServer).AppendEntries(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_AppendEntries_FullMethodName,
+		FullMethod: ConsensusService_AppendEntries_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).AppendEntries(ctx, req.(*AppendEntriesArgs))
+		return srv.(ConsensusServiceServer).AppendEntries(ctx, req.(*AppendEntriesArgs))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_SetNetworkPartition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_SetNetworkPartition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PartitionArgs)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).SetNetworkPartition(ctx, in)
+		return srv.(ConsensusServiceServer).SetNetworkPartition(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_SetNetworkPartition_FullMethodName,
+		FullMethod: ConsensusService_SetNetworkPartition_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).SetNetworkPartition(ctx, req.(*PartitionArgs))
+		return srv.(ConsensusServiceServer).SetNetworkPartition(ctx, req.(*PartitionArgs))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).GetStatus(ctx, in)
+		return srv.(ConsensusServiceServer).GetStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_GetStatus_FullMethodName,
+		FullMethod: ConsensusService_GetStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).GetStatus(ctx, req.(*Empty))
+		return srv.(ConsensusServiceServer).GetStatus(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_Propose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_Propose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProposeArgs)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).Propose(ctx, in)
+		return srv.(ConsensusServiceServer).Propose(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_Propose_FullMethodName,
+		FullMethod: ConsensusService_Propose_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).Propose(ctx, req.(*ProposeArgs))
+		return srv.(ConsensusServiceServer).Propose(ctx, req.(*ProposeArgs))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_ForceLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ConsensusService_ForceLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).ForceLeader(ctx, in)
+		return srv.(ConsensusServiceServer).ForceLeader(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RaftService_ForceLeader_FullMethodName,
+		FullMethod: ConsensusService_ForceLeader_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).ForceLeader(ctx, req.(*Empty))
+		return srv.(ConsensusServiceServer).ForceLeader(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// RaftService_ServiceDesc is the grpc.ServiceDesc for RaftService service.
+func _ConsensusService_HandlePbftMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PbftMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsensusServiceServer).HandlePbftMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConsensusService_HandlePbftMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsensusServiceServer).HandlePbftMessage(ctx, req.(*PbftMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ConsensusService_ServiceDesc is the grpc.ServiceDesc for ConsensusService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var RaftService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.RaftService",
-	HandlerType: (*RaftServiceServer)(nil),
+var ConsensusService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "common.ConsensusService",
+	HandlerType: (*ConsensusServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "RequestVote",
-			Handler:    _RaftService_RequestVote_Handler,
+			Handler:    _ConsensusService_RequestVote_Handler,
 		},
 		{
 			MethodName: "AppendEntries",
-			Handler:    _RaftService_AppendEntries_Handler,
+			Handler:    _ConsensusService_AppendEntries_Handler,
 		},
 		{
 			MethodName: "SetNetworkPartition",
-			Handler:    _RaftService_SetNetworkPartition_Handler,
+			Handler:    _ConsensusService_SetNetworkPartition_Handler,
 		},
 		{
 			MethodName: "GetStatus",
-			Handler:    _RaftService_GetStatus_Handler,
+			Handler:    _ConsensusService_GetStatus_Handler,
 		},
 		{
 			MethodName: "Propose",
-			Handler:    _RaftService_Propose_Handler,
+			Handler:    _ConsensusService_Propose_Handler,
 		},
 		{
 			MethodName: "ForceLeader",
-			Handler:    _RaftService_ForceLeader_Handler,
+			Handler:    _ConsensusService_ForceLeader_Handler,
+		},
+		{
+			MethodName: "HandlePbftMessage",
+			Handler:    _ConsensusService_HandlePbftMessage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

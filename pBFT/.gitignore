@@ -1,0 +1,20 @@
+# Binaries
+node-app
+main
+*.exe
+
+# Database & Logs
+*.db
+*.log
+
+ledger.db
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+.pycache/
+
+.env
+
