@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Raft Cosmic - Deep Space Command Center</title>
+    <style>
+        :root {
+            --space-bg: #020408;
+            --panel-bg: #0d111a;
+            --neon-blue: #00d2ff;
+            --neon-purple: #bd00ff;
+            --rift-magenta: #ff00ff;
+            --rocket-red: #ff3333;
+            --emergency-red: #ff1e1e;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--space-bg); color: white;
+            font-family: 'Segoe UI', 'Courier New', sans-serif; overflow: hidden;
+        }
+
+        /* --- Cockpit Window --- */
+        .cockpit-window {
+            position: relative; width: 96vw; height: 60vh; margin: 10px auto;
+            border: 12px solid #2c3e50; border-radius: 60px;
+            
+            /* Background Local from dashboard folder */
+            background-color: #000 !important;
+            background-image: url('/wallpaper.jpg') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            
+            box-shadow: inset 0 0 100px #000, 0 0 40px rgba(0, 210, 255, 0.2);
+            display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 1;
+        }
+
+        .cockpit-overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0, 0, 0, 0.25); z-index: 2; pointer-events: none;
+        }
+
+        /* Container cho cluster */
+        #container { position: relative; width: 600px; height: 650px; z-index: 5; }
+
+        /* --- Planets (Hành tinh lơ lửng) --- */
+        .planet {
+            position: absolute; width: 85px; height: 85px; border-radius: 50%;
+            z-index: 10; cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; 
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.15);
+            animation: cosmic-drift 10s ease-in-out infinite;
+            transition: opacity 0.4s;
+        }
+
+        .p0 { background: radial-gradient(circle at 30% 30%, #ff4e50, #f9d423) !important; }
+        .p1 { background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe) !important; }
+        .p2 { background: radial-gradient(circle at 30% 30%, #9d50bb, #6e48aa) !important; }
+        .p3 { background: radial-gradient(circle at 30% 30%, #f093fb, #f5576c) !important; }
+        .p4 { background: radial-gradient(circle at 30% 30%, #5ee7df, #b490ca) !important; }
+
+        @keyframes cosmic-drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(5px, -12px) rotate(1deg); }
+        }
+
+        .planet b { font-size: 11px; text-transform: uppercase; margin-top: 4px; text-shadow: 2px 2px 4px black; color: white; }
+        .planet small { font-size: 9px; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 4px; color: #00d2ff; }
+        
+        .offline { filter: grayscale(1) brightness(0.3) !important; opacity: 0.6; animation-play-state: paused !important; }
+        .leader { box-shadow: 0 0 50px #f1c40f, inset -10px -10px 20px rgba(0,0,0,0.8) !important; border: 3px solid #f1c40f !important; }
+
+        /* --- Control Panel --- */
+        .control-panel {
+            position: fixed; bottom: 0; width: 100%; height: 35vh;
+            background: var(--panel-bg); border-top: 6px solid #2c3e50;
+            display: grid; grid-template-columns: 1fr 2fr 1fr;
+            padding: 10px 30px; box-sizing: border-box; z-index: 100;
+        }
+
+        .console-segment {
+            border: 2px solid #34495e; margin: 5px; padding: 12px;
+            border-radius: 10px; background: rgba(255,255,255,0.02); position: relative;
+        }
+
+        .segment-title {
+            position: absolute; top: -10px; left: 15px; background: var(--panel-bg);
+            padding: 0 10px; font-size: 10px; color: var(--neon-blue); font-family: monospace;
+        }
+
+        button {
+            background: #1a2639; border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            padding: 10px; border-radius: 5px; cursor: pointer;
+            font-size: 11px; font-weight: bold; text-transform: uppercase;
+            transition: 0.2s; font-family: monospace; width: 100%;
+        }
+        button:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 10px var(--neon-blue); }
+        
+        .btn-reset { border-color: var(--emergency-red); color: var(--emergency-red); margin-top: 10px; }
+        .btn-reset:hover { background: var(--emergency-red); color: white; box-shadow: 0 0 15px var(--emergency-red); }
+
+        .terminal-screen {
+            background: black; height: 110px; border-radius: 5px;
+            font-family: 'Courier New', monospace; font-size: 10px;
+            padding: 8px; overflow: hidden; color: #2ecc71; border: 1px solid #2ecc7133;
+        }
+
+        /* --- Reality Breach (The Rift) --- */
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+        .rift-outer { stroke: var(--rift-magenta); stroke-width: 35; filter: blur(15px); opacity: 0.7; }
+        .rift-mid { stroke: var(--rift-magenta); stroke-width: 15; filter: blur(4px); opacity: 0.9; }
+        .rift-core { stroke: #fff; stroke-width: 4; filter: blur(1px); }
+        .rift-group { animation: rift-pulse 0.1s infinite alternate; }
+        @keyframes rift-pulse { from { opacity: 0.8; } to { opacity: 1; } }
+
+        /* Đường bay của tên lửa */
+        .comm-path {
+            stroke: var(--rocket-red); stroke-width: 5;
+            stroke-dasharray: 15, 8; animation: dash-flow 1.5s linear infinite;
+        }
+        @keyframes dash-flow { from { stroke-dashoffset: 46; } to { stroke-dashoffset: 0; } }
+    </style>
+</head>
+<body>
+    <div class="cockpit-window">
+        <div class="cockpit-overlay"></div>
+        <div id="container">
+            <svg id="svg">
+                <defs id="svg-defs"></defs>
+            </svg>
+            <div id="nodes"></div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="console-segment">
+            <div class="segment-title">SYSTEM COMMAND</div>
+            <button onclick="startAll('')">🚀 LAUNCH ALL NODES</button>
+            <button class="btn-reset" onclick="resetSystem()">🛑 EMERGENCY RESET</button>
+        </div>
+        <div class="console-segment">
+            <div class="segment-title">MISSION CORE</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button onclick="startAll('1')" style="border-color:var(--neon-purple); color:var(--neon-purple);">👑 ALPHA (PLANET 1)</button>
+                <button id="partitionBtn" style="border-color:var(--rift-magenta); color:var(--rift-magenta);" onclick="togglePartition()">⚡ REALITY BREACH</button>
+            </div>
+            <div style="margin-top: 15px; text-align: center; color: #444; font-size: 9px; letter-spacing: 1px;">RAFT PROTOCOL: V2.0 COSMIC SYNC</div>
+        </div>
+        <div class="console-segment">
+            <div class="segment-title">DIAGNOSTICS</div>
+            <div class="terminal-screen" id="terminal">> System Standby...</div>
+        </div>
+    </div>
+
+    <script>
+        // TỌA ĐỘ TRUNG TÂM: cy = 320 giúp kéo các hành tinh xuống dưới khung hình
+        const radius = 210, cx = 255, cy = 320;
+        let isSplit = false;
+        let isResetting = false;
+
+        function getGroup(id) { return (id < 2) ? 'A' : 'B'; }
+
+        function initNodes() {
+            const nodesDiv = document.getElementById('nodes');
+            nodesDiv.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const a = (i * 72 - 90) * Math.PI / 180;
+                const div = document.createElement('div');
+                div.id = `node-container-${i}`;
+                div.className = `planet p${i} offline`;
+                div.style.left = (cx + radius * Math.cos(a)) + 'px';
+                div.style.top = (cy + radius * Math.sin(a)) + 'px';
+                div.innerHTML = `<span>✖</span><b>Planet ${i}</b><small>T: 0</small>`;
+                nodesDiv.appendChild(div);
+            }
+        }
+
+        async function update() {
+            if (isResetting) return;
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                render(data);
+                const leader = data.find(n => n.state === 'Leader');
+                document.getElementById('terminal').innerHTML = `> SCANNING CLUSTER...<br>> LEADER: ${leader ? 'NODE ' + leader.id : 'SEARCHING...'}<br>> TERM: ${data[0].term}<br>> ONLINE: ${data.filter(n => n.state !== 'Offline').length}/5`;
+            } catch (e) {}
+        }
+
+        function render(data) {
+            const svg = document.getElementById('svg');
+            const defs = document.getElementById('svg-defs');
+            svg.innerHTML = '';
+            svg.appendChild(defs);
+
+            let leaderPos = null, leaderID = null;
+
+            data.forEach((n, i) => {
+                const el = document.getElementById(`node-container-${i}`);
+                if (!el) return;
+                const isLeader = n.state === 'Leader';
+                const isOffline = n.state === 'Offline';
+                el.className = `planet p${i} ${isOffline ? 'offline' : ''} ${isLeader ? 'leader' : ''}`;
+                
+                // Lấy tọa độ thực tế đang lơ lửng
+                const rect = el.getBoundingClientRect();
+                const parentRect = document.getElementById('container').getBoundingClientRect();
+                const x = rect.left - parentRect.left + 42;
+                const y = rect.top - parentRect.top + 42;
+
+                if (isLeader) { leaderID = n.id; leaderPos = { x, y }; }
+                const icon = isLeader ? '👑' : (n.state === 'Candidate' ? '❓' : (isOffline ? '✖' : '👨‍🚀'));
+                el.innerHTML = `<span style="font-size:24px">${icon}</span><b>Planet ${n.id}</b><small>T: ${n.term}</small>`;
+                el.onclick = () => fetch(`/api/toggle?id=${n.id}&action=${isOffline ? 'on' : 'off'}`);
+            });
+
+            if (isSplit) {
+                const x1 = cx + 420 * Math.cos(18 * Math.PI / 180), y1 = cy + 420 * Math.sin(18 * Math.PI / 180);
+                const x2 = cx + 420 * Math.cos(234 * Math.PI / 180), y2 = cy + 420 * Math.sin(234 * Math.PI / 180);
+                let d = `M ${x1} ${y1} `;
+                for (let i = 1; i <= 20; i++) {
+                    const tx = x1 + (x2 - x1) * (i / 20), ty = y1 + (y2 - y1) * (i / 20);
+                    d += `L ${tx + (i % 2 === 0 ? 12 : -12) * Math.random()} ${ty - (i % 2 === 0 ? 12 : -12) * Math.random()} `;
+                }
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'rift-group');
+                ['rift-outer', 'rift-mid', 'rift-core'].forEach(cls => {
+                    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    p.setAttribute('d', d + `L ${x2} ${y2}`); p.setAttribute('fill', 'none'); p.setAttribute('class', cls);
+                    g.appendChild(p);
+                });
+                svg.appendChild(g);
+            }
+
+            if (leaderPos && leaderID !== null) {
+                data.forEach((n, i) => {
+                    if (n.state !== 'Offline' && n.state !== 'Leader' && (!isSplit || getGroup(n.id) === getGroup(leaderID))) {
+                        const elNode = document.getElementById(`node-container-${i}`);
+                        const rectNode = elNode.getBoundingClientRect();
+                        const pR = document.getElementById('container').getBoundingClientRect();
+                        const xS = rectNode.left - pR.left + 42;
+                        const yS = rectNode.top - pR.top + 42;
+
+                        const pathId = `path-${i}`;
+                        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        p.setAttribute('d', `M ${xS} ${yS} L ${leaderPos.x} ${leaderPos.y}`);
+                        p.setAttribute('fill', 'none'); p.setAttribute('class', 'comm-path');
+                        p.setAttribute('id', pathId); svg.appendChild(p);
+
+                        const rocketGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        const rocketText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        rocketText.innerHTML = '🚀'; 
+                        rocketText.setAttribute('font-size', '22');
+                        // XOAY 45 ĐỘ ĐỂ ĐẦU TÊN LỬA THẲNG VỚI VECTOR DI CHUYỂN
+                        rocketText.setAttribute('transform', 'rotate(45) translate(-10, 10)');
+                        
+                        const anim = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+                        anim.setAttribute('dur', '3s'); // Tốc độ chậm rãi (3 giây)
+                        anim.setAttribute('repeatCount', 'indefinite');
+                        anim.setAttribute('rotate', 'auto');
+                        
+                        const mp = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+                        mp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${pathId}`);
+                        
+                        anim.appendChild(mp);
+                        rocketGroup.appendChild(rocketText);
+                        rocketGroup.appendChild(anim);
+                        svg.appendChild(rocketGroup);
+                    }
+                });
+            }
+        }
+
+        async function startAll(l) { await fetch(`/api/start_all?leader=${l}`); }
+        
+        async function resetSystem() { 
+            if(confirm("XÁC NHẬN DỪNG TOÀN BỘ HỆ THỐNG?")) {
+                isResetting = true; isSplit = false;
+                initNodes(); 
+                document.getElementById('svg').innerHTML = '<defs id="svg-defs"></defs>';
+                document.getElementById('terminal').innerHTML = "> EMERGENCY SHUTDOWN COMMAND ISSUED...";
+                const btn = document.getElementById('partitionBtn');
+                btn.innerText = "⚡ REALITY BREACH"; btn.style.borderColor = "var(--rift-magenta)";
+                await fetch('/api/reset'); 
+                setTimeout(() => { isResetting = false; }, 2000);
+            }
+        }
+
+        async function togglePartition() {
+            isSplit = !isSplit;
+            await fetch(`/api/partition?action=${isSplit ? 'split' : 'heal'}`);
+            const btn = document.getElementById('partitionBtn');
+            btn.innerText = isSplit ? "🌀 HEAL REALITY" : "⚡ REALITY BREACH";
+            btn.style.borderColor = isSplit ? "#2ecc71" : "var(--rift-magenta)";
+            btn.style.color = isSplit ? "#2ecc71" : "var(--rift-magenta)";
+        }
+
+        initNodes();
+        setInterval(update, 500);
+    </script>
+</body>
+</html>

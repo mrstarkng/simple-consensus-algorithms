@@ -1,0 +1,65 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "consensus/common/proto";
+
+service RaftService {
+  rpc RequestVote (RequestVoteArgs) returns (RequestVoteReply);
+  rpc AppendEntries (AppendEntriesArgs) returns (AppendEntriesReply);
+  rpc SetNetworkPartition (PartitionArgs) returns (PartitionReply);
+  rpc GetStatus (Empty) returns (StatusReply);
+  rpc Propose (ProposeArgs) returns (ProposeReply); 
+  rpc ForceLeader (Empty) returns (Empty);
+}
+
+message Empty {}
+
+message LogEntry {
+  int64 term = 1;
+  int64 index = 2;
+  string command = 3;
+}
+
+message RequestVoteArgs {
+  int64 term = 1;
+  int32 candidateId = 2;
+}
+
+message RequestVoteReply {
+  int64 term = 1;
+  bool vote_granted = 2;
+}
+
+message AppendEntriesArgs {
+  int64 term = 1;
+  int32 leaderId = 2;
+  repeated LogEntry entries = 3;
+}
+
+message AppendEntriesReply {
+  int64 term = 1;
+  bool success = 2;
+}
+
+message StatusReply {
+  int32 id = 1;
+  string state = 2; 
+  int64 term = 3;
+}
+
+message ProposeArgs {
+  string command = 1;
+}
+
+message ProposeReply {
+  bool success = 1;
+  int32 leader_id = 2;
+}
+
+message PartitionArgs {
+  repeated int32 isolatedNodeIds = 1;
+}
+
+message PartitionReply {
+  bool success = 1;
+}
