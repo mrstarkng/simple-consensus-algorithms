@@ -1,6 +1,10 @@
+
 syntax = "proto3";
 
 package common;
+
+option go_package = "common/proto";
+
 
 option go_package = "common/proto";
 
@@ -105,4 +109,5 @@ message PbftMessage {
 message PbftResponse {
   bool success = 1;
   string message = 2;
+}
 }
