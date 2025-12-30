@@ -26,7 +26,7 @@ const (
 )
 
 type RaftNode struct {
-	proto.UnimplementedRaftServiceServer
+	proto.UnimplementedConsensusServiceServer
 	mu            sync.Mutex
 	me            int32
 	peers         map[int32]string
@@ -170,7 +170,7 @@ func (rn *RaftNode) startElection() {
 				return
 			}
 			defer conn.Close()
-			resp, err := proto.NewRaftServiceClient(conn).RequestVote(ctx, &proto.RequestVoteArgs{Term: term, CandidateId: rn.me})
+			resp, err := proto.NewConsensusServiceClient(conn).RequestVote(ctx, &proto.RequestVoteArgs{Term: term, CandidateId: rn.me})
 			if err == nil && resp.VoteGranted {
 				rn.mu.Lock()
 				votes++
@@ -212,7 +212,7 @@ func (rn *RaftNode) becomeLeader() {
 						return
 					}
 					defer conn.Close()
-					resp, err := proto.NewRaftServiceClient(conn).AppendEntries(ctx, &proto.AppendEntriesArgs{Term: term, LeaderId: rn.me, Entries: logs})
+					resp, err := proto.NewConsensusServiceClient(conn).AppendEntries(ctx, &proto.AppendEntriesArgs{Term: term, LeaderId: rn.me, Entries: logs})
 					if err == nil && resp.Success {
 						mu.Lock()
 						successCount++
@@ -245,7 +245,7 @@ func main() {
 	}
 	lis, _ := net.Listen("tcp", "localhost:"+ports[*id])
 	s := grpc.NewServer()
-	proto.RegisterRaftServiceServer(s, NewRaftNode(int32(*id), peers))
+	proto.RegisterConsensusServiceServer(s, NewRaftNode(int32(*id), peers))
 	log.Printf("Node %d starting...", *id)
 	s.Serve(lis)
 }

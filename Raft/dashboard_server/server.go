@@ -48,7 +48,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		info := map[string]interface{}{"id": i, "state": "Offline", "term": 0}
 		conn, err := grpc.Dial("localhost:"+p, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithTimeout(100*time.Millisecond))
 		if err == nil {
-			c := proto.NewRaftServiceClient(conn)
+			c := proto.NewConsensusServiceClient(conn)
 			s, err := c.GetStatus(context.Background(), &proto.Empty{})
 			if err == nil {
 				info["state"], info["term"] = s.State, s.Term
@@ -96,7 +96,7 @@ func startAll(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(1500 * time.Millisecond)
 			id, _ := strconv.Atoi(leader)
 			conn, _ := grpc.Dial("localhost:"+ports[id], grpc.WithTransportCredentials(insecure.NewCredentials()))
-			proto.NewRaftServiceClient(conn).ForceLeader(context.Background(), &proto.Empty{})
+			proto.NewConsensusServiceClient(conn).ForceLeader(context.Background(), &proto.Empty{})
 		}()
 	}
 }
@@ -122,6 +122,6 @@ func partition(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		conn, _ := grpc.Dial("localhost:"+p, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		proto.NewRaftServiceClient(conn).SetNetworkPartition(context.Background(), &proto.PartitionArgs{IsolatedNodeIds: list})
+		proto.NewConsensusServiceClient(conn).SetNetworkPartition(context.Background(), &proto.PartitionArgs{IsolatedNodeIds: list})
 	}
 }
