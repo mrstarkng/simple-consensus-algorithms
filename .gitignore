@@ -1,0 +1,48 @@
+### Go-specific ###
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+### Python-specific ###
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+*.spec
+
+### Project-specific (from your pBFT folder, extended) ###
+# Binaries
+node-app
+main
+
+# Database & Logs
+*.db
+*.log
+ledger.db
+
+### IDE and Editor files ###
+.vscode/
+.idea/
+*.swp
+*.swo
+
+### OS-specific files ###
+.DS_Store
+Thumbs.db
+
+### Environment and Secrets ###
+.env
+.env.*
+
+### Miscellaneous ###
+*~
+*.bak
+*.tmp
+node_modules/

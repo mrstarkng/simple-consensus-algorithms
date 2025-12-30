@@ -5,6 +5,9 @@ package common;
 
 option go_package = "common/proto";
 
+
+option go_package = "common/proto";
+
 // --- DỊCH VỤ DÙNG CHUNG (SHARED SERVICE) ---
 // Service này chứa tất cả các method của cả Raft và pBFT
 service ConsensusService {
@@ -106,4 +109,5 @@ message PbftMessage {
 message PbftResponse {
   bool success = 1;
   string message = 2;
+}
 }
