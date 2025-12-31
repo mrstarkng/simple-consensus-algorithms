@@ -11,7 +11,7 @@ import (
 
     "google.golang.org/grpc"
 
-    // [CẬP NHẬT ĐÚNG TÊN MODULE "consensus"]
+
     // 1. Import logic Node từ folder pBFT/node
     "consensus/pBFT/node" 
 
@@ -53,7 +53,7 @@ func main() {
 
     grpcServer := grpc.NewServer()
 
-    // [QUAN TRỌNG] Đăng ký service với ConsensusService chung
+
     // Hàm này đến từ file common/proto/consensus_grpc.pb.go
     pb.RegisterConsensusServiceServer(grpcServer, pbftServer)
 
@@ -65,7 +65,6 @@ func main() {
     }()
 
     // --- 5. Connect to Peers ---
-    // Đợi một chút để các node khác kịp khởi động rồi kết nối
     go pbftServer.ConnectToPeers()
 
     // --- 6. HTTP API (Controller) ---

@@ -31,9 +31,7 @@ echo "🔨 Building..."
 go build -o node-app main.go
 if [ $? -ne 0 ]; then echo "❌ Build Node Failed"; exit 1; fi
 
-# 2. Build Dashboard (Sẽ tạo ở Bước 3)
-# Tạm thời comment lại nếu bạn chưa làm Bước 3, 
-# nhưng nên để sẵn để tí nữa đỡ phải sửa script.
+# 2. Build Dashboard 
 go build -o dashboard-app dashboard/server.go
 if [ $? -ne 0 ]; then echo "❌ Build Dashboard Failed"; exit 1; fi
 

@@ -108,7 +108,7 @@ func (s *Server) StartConsensus() error {
 
 // --- RPC HANDLE (Cập nhật tên hàm theo Proto) ---
 
-// [FIX] Tên hàm phải là HandlePbftMessage (như trong service proto)
+
 func (s *Server) HandlePbftMessage(ctx context.Context, req *pb.PbftMessage) (*pb.PbftResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

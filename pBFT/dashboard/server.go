@@ -178,7 +178,7 @@ func handleReport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// ... (Các hàm GetLedger, AskGemini, Websocket giữ nguyên như Raft) ...
+
 func handleGetLedger(w http.ResponseWriter, r *http.Request) {
 	rows, _ := db.Query("SELECT sequence, prev_hash, hash, timestamp FROM blocks ORDER BY sequence DESC")
 	defer rows.Close()
