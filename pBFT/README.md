@@ -99,12 +99,12 @@ Dự án hỗ trợ chạy native trên Windows thông qua file Batch script.
 3.  **Dừng hệ thống:**
     * Nhấn bất kỳ phím nào tại cửa sổ CMD đang chạy để tự động tắt toàn bộ các node và dashboard.
 
-**Lưu ý:** Nếu dùng **Git Bash** trên Windows, bạn có thể chạy trực tiếp file `./run_network.sh` giống như trên Linux/macOS.
+**Lưu ý:** Nếu dùng **Git Bash** trên Windows, có thể chạy trực tiếp file `./run_network.sh` giống như trên Linux/macOS.
 
 
 ## 3. Luồng sử dụng 
 
-Sau khi hệ thống đã khởi chạy thành công, bạn có thể thực hiện các bước sau để quan sát thuật toán pBFT hoạt động:
+Sau khi hệ thống đã khởi chạy thành công, ta có thể thực hiện các bước sau để quan sát thuật toán pBFT hoạt động:
 
 1.  **Truy cập Dashboard:** Mở trình duyệt tại địa chỉ `http://localhost:8080`.
 2.  **Gửi Request:** Nhấn nút "**▶ Client Request**". Dashboard sẽ đóng vai trò Client, gửi lệnh tới Node 1 (Primary).

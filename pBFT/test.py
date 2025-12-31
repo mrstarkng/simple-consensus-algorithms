@@ -70,6 +70,19 @@ def get_chain_length():
         return len(data) if data else 0
     except:
         return 0
+    
+def get_current_view():
+    """Lấy View ID hiện tại từ hệ thống để kiểm tra View Change"""
+    try:
+        # Gọi API /api/status mà chúng ta vừa thêm vào Dashboard
+        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=2)
+        if resp.status_code == 200:
+            data = resp.json()
+            # Trả về field 'view' từ JSON
+            return data.get("view", 0) 
+    except:
+        pass
+    return 0
 
 # --- TEST CASES ---
 
@@ -142,26 +155,75 @@ def test_04_chain_integrity():
         log("FAIL", f"Integrity check failed. Expected 3, found {count}.")
 
 def test_05_primary_failover():
-    print(f"\n{Fore.MAGENTA}=== TC-05: Primary Node Malicious (View Change) ==={Style.RESET_ALL}")
-    log("THEORY", "Scenario: Primary (Node 1) is Malicious/Silent.")
-    log("THEORY", "Mechanism: Client should detect timeout and try Node 2.")
+    print(f"\n{Fore.MAGENTA}=== TC-05: Primary Node Malicious (View Change & Retry) ==={Style.RESET_ALL}")
+    log("THEORY", "Scenario: Node 1 Malicious. System cycles Views (1->2).")
+    log("THEORY", "Mechanism: Timeout (10s) -> View Change -> Client Retry -> Node 2 Commits.")
     
     if not reset_system(): return
 
-    log("INFO", "Setting Node 1 (Default Primary) as Malicious...")
+    # 1. Kiểm tra trạng thái ban đầu
+    initial_view = get_current_view() 
+    initial_height = get_chain_length()
+    log("INFO", f"Initial State: View={initial_view}, Height={initial_height}")
+
+    # 2. Tấn công: Biến Node 1 thành Malicious
+    log("INFO", "Setting Node 1 (Default Primary) as 😈 MALICIOUS...")
     set_malicious("node1", True)
     
-    log("INFO", "Client sends request...")
-    trigger_client_request()
+    # 3. Chờ Timeout kích hoạt View Change
+    # Trong code pbft.go, BaseTimeout = 10s. Chúng ta cần chờ lâu hơn thế.
+    log("INFO", "Waiting for Primary Timeout (approx 12-15s)...")
     
-    log("INFO", "Waiting 3s for Client Failover & Consensus...")
-    time.sleep(3)
+    new_view_established = False
+    current_view = initial_view
     
-    count = get_chain_length()
-    if count == 1:
-        log("PASS", "Failover successful. Node 2 likely took over as Primary.")
+    # Vòng lặp chờ View thay đổi (Chờ tối đa 20s)
+    for i in range(20):
+        time.sleep(1)
+        current_view = get_current_view()
+        
+        # Nếu View đã tăng (tức là Node 1 đã bị phế truất)
+        if current_view > initial_view:
+            log("PASS", f"View Change detected! T+{i+1}s: View moved from {initial_view} to {current_view}.")
+            new_view_established = True
+            break
+        else:
+             print(f"   -> T+{i+1}s: Still View {current_view} (Waiting for 10s timeout)...", end='\r')
+    print("") # Xuống dòng cho đẹp
+
+    if not new_view_established:
+        log("FAIL", "System did not trigger View Change within timeout limit.")
+        set_malicious("node1", False)
+        return
+
+    # 4. Gửi lại Request (Client Retry Logic)
+    # Vì request đầu tiên gửi cho Node 1 đã bị drop, Client phải gửi lại cho mạng.
+    # Dashboard sẽ tự động tìm Primary mới (Node 2) để gửi vào.
+    log("INFO", "View changed. Client RETRIES request to new Primary...")
+    if trigger_client_request():
+        log("INFO", "Request sent. Waiting for Consensus...")
     else:
-        log("FAIL", "Failover failed. System stuck.")
+        log("FAIL", "New Primary rejected request.")
+        set_malicious("node1", False)
+        return
+    
+    # 5. Chờ Block Commit
+    success = False
+    for i in range(5):
+        time.sleep(1)
+        current_height = get_chain_length()
+        if current_height > initial_height:
+            success = True
+            break
+            
+    # 6. Kiểm tra kết quả
+    if success:
+        log("PASS", f"Failover Successful! Block committed at Height {current_height} in View {current_view}.")
+    else:
+        log("FAIL", "View changed but Block was NOT committed.")
+
+    # Cleanup: Trả lại trạng thái Honest cho Node 1
+    set_malicious("node1", False)
 
 # --- RUNNER ---
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ import (
 const (
 	Port   = ":8080"
 	DBPath = "./ledger.db"
+	WebFolder = "dashboard/static"
 )
 
 // --- TYPES ---
@@ -30,6 +31,17 @@ type Event struct {
 	Color      string `json:"color"`
 	Timestamp  int64  `json:"timestamp"`
 	BlockHash  string `json:"block_hash,omitempty"`
+}
+
+type SystemState struct {
+	mu           sync.RWMutex
+	NodeViews    map[string]int64 // Lưu View hiện tại của từng Node
+	CurrentView  int64            // View thống nhất (Majority)
+	ChainLength  int
+}
+
+var state = SystemState{
+	NodeViews: make(map[string]int64),
 }
 
 type BlockRecord struct {
@@ -196,7 +208,7 @@ func handleAskGemini(w http.ResponseWriter, r *http.Request) {
 	key := os.Getenv("GEMINI_API_KEY")
 	if key == "" { http.Error(w, "Missing API Key", 500); return }
 	var req struct { Logs string `json:"logs"` }; json.NewDecoder(r.Body).Decode(&req)
-	prompt := "Analyze these pBFT Consensus logs (PrePrepare, Prepare, Commit). Explain any Malicious behavior:\n" + req.Logs
+	prompt := "Phân tích log từ hệ thống mô phỏng thuật toán đồng thuận pBFT này (PrePrepare, Prepare, Commit). Giải thích bất kỳ hành vi độc hại nào:\n" + req.Logs
 	body, _ := json.Marshal(map[string]interface{}{"contents": []interface{}{map[string]interface{}{"parts": []interface{}{map[string]interface{}{"text": prompt}}}}})
 	resp, _ := http.Post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key="+key, "application/json", bytes.NewBuffer(body))
 	defer resp.Body.Close(); io.Copy(w, resp.Body)
