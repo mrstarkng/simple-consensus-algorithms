@@ -23,7 +23,7 @@ IF %ERRORLEVEL% NEQ 0 (
 
 :: Build Node (Sửa đường dẫn pBFT/main.go tùy theo cấu trúc folder thật của bạn)
 :: Giả sử file main nằm ở folder pBFT
-go build -o node-app.exe pBFT/main.go
+go build -o node-app.exe main.go
 IF %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build Node Failed!
     pause
@@ -43,7 +43,6 @@ start /B node-app.exe -id=node2 -port=50052
 start /B node-app.exe -id=node3 -port=50053
 start /B node-app.exe -id=node4 -port=50054
 start /B node-app.exe -id=node5 -port=50055
-
 echo.
 echo ✅ SYSTEM STARTED SUCCESSFULLY!
 echo 👉 Dashboard: http://localhost:8080
